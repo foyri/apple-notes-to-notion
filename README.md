@@ -2,6 +2,8 @@
 
 Automate migration of Apple Notes to Notion using a hybrid local + Dify workflow.
 
+https://cloud.dify.ai/app/6a97c493-eabc-44c0-ab1d-06f5d854fa62/workflow
+
 **Features:**
 - Preserves original note creation dates (from macOS metadata)
 - Uploads images/attachments to Dropbox for embedding in Notion
