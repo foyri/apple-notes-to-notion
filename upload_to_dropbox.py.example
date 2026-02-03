@@ -1,0 +1,49 @@
+import dropbox
+import os
+import json
+
+# Paste your Dropbox access token here
+# Get it from: https://www.dropbox.com/developers/apps
+# Create app -> Scoped access -> App folder -> Generate access token
+ACCESS_TOKEN = 'YOUR_DROPBOX_ACCESS_TOKEN_HERE'
+
+dbx = dropbox.Dropbox(ACCESS_TOKEN)
+
+# Create folder
+folder_path = '/Apple Notes Attachments'
+try:
+    dbx.files_create_folder_v2(folder_path)
+    print(f"Created folder: {folder_path}")
+except dropbox.exceptions.ApiError as e:
+    if 'path/conflict/folder' in str(e):
+        print(f"Folder already exists: {folder_path}")
+    else:
+        raise e
+
+# Upload unique attachments
+base_dir = 'apple_notes'
+attachment_dirs = ['images', 'attachments']
+mapping = {}
+uploaded = set()
+
+for dir_name in attachment_dirs:
+    dir_path = os.path.join(base_dir, dir_name)
+    if os.path.exists(dir_path):
+        for file_name in os.listdir(dir_path):
+            full_path = os.path.join(dir_path, file_name)
+            ref = f"{dir_name}/{file_name}"
+            if ref in uploaded:
+                continue
+            dbx_path = f"{folder_path}/{file_name}"
+            with open(full_path, 'rb') as f:
+                dbx.files_upload(f.read(), dbx_path, mode=dropbox.files.WriteMode('add'))
+            # Create share link (view-only by default)
+            link = dbx.sharing_create_shared_link_with_settings(dbx_path).url
+            mapping[ref] = link
+            uploaded.add(ref)
+            print(f"Uploaded {ref} -> {link}")
+
+# Save mapping
+with open('attachment_mapping.json', 'w') as f:
+    json.dump(mapping, f)
+print("Mapping saved to attachment_mapping.json")
